@@ -17,6 +17,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty('--border', settings.secondaryColor);
     root.style.setProperty('--input', settings.secondaryColor);
     root.style.setProperty('--ring', settings.secondaryColor);
+    root.style.setProperty('--muted-foreground', settings.secondaryColor + '80'); // 50% opacity
 
     // Also update card, popover etc for consistency
     root.style.setProperty('--card', settings.primaryColor);

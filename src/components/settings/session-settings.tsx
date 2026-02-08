@@ -196,7 +196,7 @@ export function SessionSettings({ sessionId, onSave, onCancel, onDelete }: Sessi
             <CardTitle className="text-sm font-semibold uppercase">Cookies</CardTitle>
             <Tooltip>
                 <TooltipTrigger><HelpCircle size={12} className="text-muted-foreground"/></TooltipTrigger>
-                <TooltipContent>Manually specify cookies to be sent in the 'Cookie' header</TooltipContent>
+                <TooltipContent>Manually specify cookies to be sent in the &apos;Cookie&apos; header</TooltipContent>
             </Tooltip>
           </div>
         </CardHeader>
@@ -241,7 +241,7 @@ export function SessionSettings({ sessionId, onSave, onCancel, onDelete }: Sessi
       <BodyBuilder
         title="Body"
         node={formData.requestBody}
-        onChange={(node) => setFormData({ ...formData, requestBody: node as any })}
+        onChange={(node) => setFormData({ ...formData, requestBody: node as BodyNode })}
       />
 
       <div className="flex items-center gap-4">
@@ -253,7 +253,7 @@ export function SessionSettings({ sessionId, onSave, onCancel, onDelete }: Sessi
       <BodyBuilder
         title="Response Mapping"
         node={formData.responseBodyMapping}
-        onChange={(node) => setFormData({ ...formData, responseBodyMapping: node as any })}
+        onChange={(node) => setFormData({ ...formData, responseBodyMapping: node as BodyNode })}
         isResponse
       />
 
@@ -283,7 +283,7 @@ export function SessionSettings({ sessionId, onSave, onCancel, onDelete }: Sessi
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete the chat session "{formData.name}" and all its history.
+                This will permanently delete the chat session &quot;{formData.name}&quot; and all its history.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
