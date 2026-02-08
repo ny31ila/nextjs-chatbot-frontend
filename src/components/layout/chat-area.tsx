@@ -128,7 +128,7 @@ export function ChatArea() {
       addLog({ type: 'request', message: `HTTP ${activeSession.method} to ${activeSession.url}`, data: userMessage.rawRequest });
       try {
         const result = await sendHttpRequest(activeSession, input);
-        addLog({ type: 'response', message: 'Received HTTP response', data: result.rawResponse });
+        addLog({ type: 'response', message: 'Received HTTP response', data: result.rawResponse as any });
         const botMessage: Message = {
           id: crypto.randomUUID(),
           role: 'bot',
