@@ -42,7 +42,7 @@ export function Sidebar({ onOpenSettings, onOpenLogs, onEditSession, onSelectSes
         <h1 className="font-bold text-lg truncate">chatbot frontend</h1>
       </div>
 
-      <ScrollArea className="flex-1 px-2 py-2">
+      <ScrollArea className="flex-1 px-2 py-2 min-h-0">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
