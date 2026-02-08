@@ -2,32 +2,21 @@ import { BodyNode, ChatSession } from "@/store/use-chat-store";
 
 /**
  * Converts the recursive BodyNode structure into a real JSON object.
- * Replaces the 'isMessageSource' node value with the actual user message.
  */
-export function buildRequestBody(nodes: BodyNode[], message: string): any {
-  // If there's only one top-level node and it's an object/array, we might want to return it directly.
-  // But let's assume the root is an array of items that could be combined.
-  // Usually, a request body is a single object or array.
-
-  if (nodes.length === 1) {
-    return transformNode(nodes[0], message);
-  }
-
-  // If multiple nodes, we'll try to merge them if they are objects, or return as array.
-  const transformed = nodes.map(n => transformNode(n, message));
-  return transformed.length > 1 ? transformed : transformed[0];
+export function buildRequestBody(node: BodyNode, message: string): any {
+  return transformNode(node, message);
 }
 
 function transformNode(node: BodyNode, message: string): any {
   switch (node.type) {
-    case 'kv':
+    case 'primitive':
       return node.isMessageSource ? message : node.value;
     case 'array':
       return node.items.map(n => transformNode(n, message));
     case 'object':
       const obj: any = {};
-      node.items.forEach(item => {
-        obj[item.key] = transformNode(item.value, message);
+      node.properties.forEach(prop => {
+        obj[prop.key] = transformNode(prop.value, message);
       });
       return obj;
   }
@@ -36,28 +25,26 @@ function transformNode(node: BodyNode, message: string): any {
 /**
  * Extracts the bot message from a response object based on the mapping.
  */
-export function extractBotMessage(mapping: BodyNode[], responseBody: any): string {
-  if (mapping.length === 0) return typeof responseBody === 'string' ? responseBody : JSON.stringify(responseBody);
-
+export function extractBotMessage(mapping: BodyNode, responseBody: any): string {
   let foundMessage = "";
 
   const findInNode = (node: BodyNode, data: any) => {
-    if (!data) return;
+    if (data === undefined || data === null) return;
 
-    if (node.type === 'kv' && node.isMessageSource) {
-      foundMessage = data;
+    if (node.type === 'primitive' && node.isMessageSource) {
+      foundMessage = String(data);
     } else if (node.type === 'array' && Array.isArray(data)) {
       node.items.forEach((childNode, idx) => {
         findInNode(childNode, data[idx]);
       });
     } else if (node.type === 'object' && typeof data === 'object') {
-      node.items.forEach(item => {
-        findInNode(item.value, data[item.key]);
+      node.properties.forEach(prop => {
+        findInNode(prop.value, data[prop.key]);
       });
     }
   };
 
-  mapping.forEach(m => findInNode(m, responseBody));
+  findInNode(mapping, responseBody);
 
   return foundMessage || (typeof responseBody === 'string' ? responseBody : JSON.stringify(responseBody));
 }
@@ -65,6 +52,7 @@ export function extractBotMessage(mapping: BodyNode[], responseBody: any): strin
 export async function sendHttpRequest(session: ChatSession, message: string) {
   const body = buildRequestBody(session.requestBody, message);
   const headers: Record<string, string> = {};
+
   session.headers.forEach(h => {
     if (h.key) headers[h.key] = h.value;
   });
@@ -95,41 +83,13 @@ export async function sendHttpRequest(session: ChatSession, message: string) {
   const responseData = await response.json();
 
   return {
-    rawRequest: body,
+    rawRequest: {
+        url: session.url,
+        method: session.method,
+        headers: options.headers as Record<string, string>,
+        body: body
+    },
     rawResponse: responseData,
     extractedMessage: extractBotMessage(session.responseBodyMapping, responseData)
   };
-}
-
-// WebSocket Manager
-const wsConnections: Record<string, WebSocket> = {};
-
-export function getWebSocket(session: ChatSession, onMessage: (data: any) => void) {
-    if (wsConnections[session.id]) {
-        return wsConnections[session.id];
-    }
-
-    const ws = new WebSocket(session.url);
-
-    ws.onmessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            onMessage(data);
-        } catch (e) {
-            onMessage(event.data);
-        }
-    };
-
-    wsConnections[session.id] = ws;
-    return ws;
-}
-
-export function sendWebSocketMessage(session: ChatSession, message: string) {
-    const ws = wsConnections[session.id];
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        const body = buildRequestBody(session.requestBody, message);
-        ws.send(JSON.stringify(body));
-        return body;
-    }
-    return null;
 }

@@ -79,7 +79,15 @@ export function ChatArea() {
       role: 'user',
       content: input,
       timestamp: Date.now(),
-      rawRequest: buildRequestBody(activeSession.requestBody, input)
+      rawRequest: {
+          url: activeSession.url,
+          method: activeSession.method,
+          headers: activeSession.headers.reduce((acc, h) => {
+              if (h.key) acc[h.key] = h.value;
+              return acc;
+          }, {} as Record<string, string>),
+          body: buildRequestBody(activeSession.requestBody, input)
+      }
     };
 
     addMessage(activeSession.id, userMessage);
@@ -168,9 +176,16 @@ export function ChatArea() {
                 )}
               >
                 {debugMode ? (
-                  <pre className="text-[10px] overflow-auto max-h-60 p-2 bg-black/5 rounded font-mono">
-                    {JSON.stringify(msg.role === 'user' ? msg.rawRequest : msg.rawResponse, null, 2)}
-                  </pre>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center opacity-50">
+                      <span className="text-[8px] font-bold uppercase tracking-widest">
+                        {msg.role === 'user' ? 'Outgoing Request' : 'Incoming Response'}
+                      </span>
+                    </div>
+                    <pre className="text-[10px] overflow-auto max-h-80 p-2 bg-black/5 rounded font-mono border border-primary/10">
+                      {JSON.stringify(msg.role === 'user' ? msg.rawRequest : msg.rawResponse, null, 2)}
+                    </pre>
+                  </div>
                 ) : (
                   <div className="prose prose-sm dark:prose-invert break-words">
                     {activeSession.isMarkdown ? (

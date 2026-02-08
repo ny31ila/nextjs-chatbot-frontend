@@ -1,29 +1,34 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type BodyItemType = 'kv' | 'array' | 'object';
+export type BodyNodeType = 'primitive' | 'array' | 'object';
 
-export interface KVItem {
+export interface PrimitiveNode {
   id: string;
-  type: 'kv';
-  key: string;
+  type: 'primitive';
   value: string;
-  isMessageSource: boolean; // Radio button selection
+  isMessageSource: boolean;
 }
 
-export interface ArrayItem {
+export interface ArrayNode {
   id: string;
   type: 'array';
   items: BodyNode[];
 }
 
-export interface ObjectItem {
+export interface ObjectNode {
   id: string;
   type: 'object';
-  items: { key: string; value: BodyNode }[];
+  properties: Property[];
 }
 
-export type BodyNode = KVItem | ArrayItem | ObjectItem;
+export interface Property {
+  id: string;
+  key: string;
+  value: BodyNode;
+}
+
+export type BodyNode = PrimitiveNode | ArrayNode | ObjectNode;
 
 export interface ChatSession {
   id: string;
@@ -33,8 +38,8 @@ export interface ChatSession {
   method: 'GET' | 'POST';
   headers: { id: string; key: string; value: string }[];
   cookies: { id: string; key: string; value: string }[];
-  requestBody: BodyNode[]; // List of top-level items (usually an object but user can add multiple)
-  responseBodyMapping: BodyNode[];
+  requestBody: BodyNode; // Root is a single node (usually object)
+  responseBodyMapping: BodyNode;
   isMarkdown: boolean;
   isPinned: boolean;
   history: Message[];
@@ -45,7 +50,12 @@ export interface Message {
   role: 'user' | 'bot';
   content: string;
   timestamp: number;
-  rawRequest?: any;
+  rawRequest?: {
+    headers: Record<string, string>;
+    body: any;
+    url: string;
+    method: string;
+  };
   rawResponse?: any;
 }
 
@@ -78,8 +88,16 @@ export const createDefaultSession = (): ChatSession => ({
     { id: '4', key: 'Connection', value: 'keep-alive' },
   ],
   cookies: [],
-  requestBody: [],
-  responseBodyMapping: [],
+  requestBody: {
+    id: crypto.randomUUID(),
+    type: 'object',
+    properties: []
+  },
+  responseBodyMapping: {
+    id: crypto.randomUUID(),
+    type: 'object',
+    properties: []
+  },
   isMarkdown: true,
   isPinned: false,
   history: [],

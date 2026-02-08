@@ -240,8 +240,8 @@ export function SessionSettings({ sessionId, onSave, onCancel, onDelete }: Sessi
 
       <BodyBuilder
         title="Body"
-        nodes={formData.requestBody}
-        onChange={(nodes) => setFormData({ ...formData, requestBody: nodes })}
+        node={formData.requestBody}
+        onChange={(node) => setFormData({ ...formData, requestBody: node as any })}
       />
 
       <div className="flex items-center gap-4">
@@ -252,8 +252,8 @@ export function SessionSettings({ sessionId, onSave, onCancel, onDelete }: Sessi
 
       <BodyBuilder
         title="Response Mapping"
-        nodes={formData.responseBodyMapping}
-        onChange={(nodes) => setFormData({ ...formData, responseBodyMapping: nodes })}
+        node={formData.responseBodyMapping}
+        onChange={(node) => setFormData({ ...formData, responseBodyMapping: node as any })}
         isResponse
       />
 
