@@ -59,6 +59,14 @@ export interface Message {
   rawResponse?: any;
 }
 
+export interface LogEntry {
+  id: string;
+  timestamp: number;
+  type: 'info' | 'error' | 'request' | 'response';
+  message: string;
+  data?: any;
+}
+
 interface ChatStore {
   sessions: ChatSession[];
   activeSessionId: string | null;
@@ -66,6 +74,7 @@ interface ChatStore {
     primaryColor: string;
     secondaryColor: string;
   };
+  logs: LogEntry[];
   addSession: (session: ChatSession) => void;
   updateSession: (id: string, updates: Partial<ChatSession>) => void;
   deleteSession: (id: string) => void;
@@ -73,6 +82,8 @@ interface ChatStore {
   updateSettings: (updates: Partial<ChatStore['settings']>) => void;
   addMessage: (sessionId: string, message: Message) => void;
   clearHistory: (sessionId: string) => void;
+  addLog: (log: Omit<LogEntry, 'id' | 'timestamp'>) => void;
+  clearLogs: () => void;
 }
 
 export const createDefaultSession = (): ChatSession => ({
@@ -109,9 +120,10 @@ export const useChatStore = create<ChatStore>()(
       sessions: [],
       activeSessionId: null,
       settings: {
-        primaryColor: '#ffffff',
-        secondaryColor: '#000000',
+        primaryColor: '#000000',
+        secondaryColor: '#ffffff',
       },
+      logs: [],
       addSession: (session) =>
         set((state) => ({ sessions: [...state.sessions, session] })),
       updateSession: (id, updates) =>
@@ -138,6 +150,18 @@ export const useChatStore = create<ChatStore>()(
             s.id === sessionId ? { ...s, history: [] } : s
           ),
         })),
+      addLog: (log) =>
+        set((state) => ({
+          logs: [
+            {
+              ...log,
+              id: crypto.randomUUID(),
+              timestamp: Date.now(),
+            },
+            ...state.logs,
+          ].slice(0, 1000), // Keep last 1000 logs
+        })),
+      clearLogs: () => set({ logs: [] }),
     }),
     {
       name: 'chatbot-postman-storage',

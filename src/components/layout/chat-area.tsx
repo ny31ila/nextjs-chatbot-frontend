@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function ChatArea() {
-  const { activeSessionId, sessions, addMessage } = useChatStore();
+  const { activeSessionId, sessions, addMessage, addLog } = useChatStore();
   const [input, setInput] = useState('');
   const [debugMode, setDebugMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,11 +53,18 @@ export function ChatArea() {
         const ws = new WebSocket(activeSession.url);
         wsRef.current = ws;
 
-        ws.onopen = () => setWsConnected(true);
-        ws.onclose = () => setWsConnected(false);
+        ws.onopen = () => {
+          setWsConnected(true);
+          addLog({ type: 'info', message: `WebSocket connected to ${activeSession.url}` });
+        };
+        ws.onclose = () => {
+          setWsConnected(false);
+          addLog({ type: 'info', message: `WebSocket disconnected from ${activeSession.url}` });
+        };
         ws.onerror = () => {
             setWsConnected(false);
             toast.error("WebSocket connection error");
+            addLog({ type: 'error', message: `WebSocket error at ${activeSession.url}` });
         };
         ws.onmessage = (event) => {
             let data;
@@ -75,6 +82,7 @@ export function ChatArea() {
                 rawResponse: data
             };
             addMessage(activeSession.id, botMessage);
+            addLog({ type: 'response', message: 'Received WebSocket message', data });
         };
       } catch (e) {
         console.error(e);
@@ -113,11 +121,14 @@ export function ChatArea() {
 
     addMessage(activeSession.id, userMessage);
     setInput('');
+    textareaRef.current?.focus();
 
     if (activeSession.protocol === 'http') {
       setIsLoading(true);
+      addLog({ type: 'request', message: `HTTP ${activeSession.method} to ${activeSession.url}`, data: userMessage.rawRequest });
       try {
         const result = await sendHttpRequest(activeSession, input);
+        addLog({ type: 'response', message: 'Received HTTP response', data: result.rawResponse });
         const botMessage: Message = {
           id: crypto.randomUUID(),
           role: 'bot',
@@ -129,6 +140,7 @@ export function ChatArea() {
         addMessage(activeSession.id, botMessage);
       } catch (error: any) {
         toast.error(`Request failed: ${error.message}`);
+        addLog({ type: 'error', message: `HTTP Request failed: ${error.message}` });
       } finally {
         setIsLoading(false);
       }
@@ -136,7 +148,7 @@ export function ChatArea() {
         if (wsRef.current && wsConnected) {
             const body = buildRequestBody(activeSession.requestBody, input);
             wsRef.current.send(JSON.stringify(body));
-            // Message update for rawRequest
+            addLog({ type: 'request', message: 'Sent WebSocket message', data: body });
             // We update the last message (user message) with rawRequest if needed,
             // but we already did that above.
         } else {
@@ -154,7 +166,7 @@ export function ChatArea() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-screen overflow-hidden bg-background">
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-background">
       <header className="p-4 border-b flex justify-between items-center">
         <div className="flex items-center gap-2">
             <h2 className="font-semibold">{activeSession.name}</h2>
@@ -178,7 +190,7 @@ export function ChatArea() {
         </Tooltip>
       </header>
 
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4 min-h-0">
         <div className="max-w-3xl mx-auto space-y-4">
           {activeSession.history.map((msg) => (
             <div

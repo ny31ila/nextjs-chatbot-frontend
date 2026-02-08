@@ -3,16 +3,18 @@
 import { useChatStore, createDefaultSession } from '@/store/use-chat-store';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Settings, MessageSquare, Pin, PinOff, Edit2, Bot } from 'lucide-react';
+import { Plus, Settings, MessageSquare, Pin, PinOff, Edit2, Bot, Terminal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SidebarProps {
   onOpenSettings: () => void;
+  onOpenLogs: () => void;
   onEditSession: (id: string) => void;
+  onSelectSession: () => void;
 }
 
-export function Sidebar({ onOpenSettings, onEditSession }: SidebarProps) {
+export function Sidebar({ onOpenSettings, onOpenLogs, onEditSession, onSelectSession }: SidebarProps) {
   const { sessions, activeSessionId, addSession, setActiveSession, updateSession } = useChatStore();
 
   const sortedSessions = [...sessions].sort((a, b) => {
@@ -25,6 +27,7 @@ export function Sidebar({ onOpenSettings, onEditSession }: SidebarProps) {
     const newSession = createDefaultSession();
     addSession(newSession);
     setActiveSession(newSession.id);
+    onSelectSession();
   };
 
   const togglePin = (e: React.MouseEvent, id: string, isPinned: boolean) => {
@@ -60,7 +63,10 @@ export function Sidebar({ onOpenSettings, onEditSession }: SidebarProps) {
           {sortedSessions.map((session) => (
             <div
               key={session.id}
-              onClick={() => setActiveSession(session.id)}
+              onClick={() => {
+                setActiveSession(session.id);
+                onSelectSession();
+              }}
               className={cn(
                 "group flex items-center justify-between p-2 rounded-md cursor-pointer text-sm transition-colors",
                 activeSessionId === session.id
@@ -97,7 +103,21 @@ export function Sidebar({ onOpenSettings, onEditSession }: SidebarProps) {
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t mt-auto">
+      <div className="p-4 border-t mt-auto space-y-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2"
+              onClick={onOpenLogs}
+            >
+              <Terminal size={16} />
+              System Logs
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>View HTTP and WebSocket activity logs</TooltipContent>
+        </Tooltip>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
