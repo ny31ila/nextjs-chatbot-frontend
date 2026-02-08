@@ -27,7 +27,7 @@ export function Sidebar({ onOpenSettings, onOpenLogs, onEditSession, onSelectSes
     const newSession = createDefaultSession();
     addSession(newSession);
     setActiveSession(newSession.id);
-    onSelectSession();
+    onEditSession(newSession.id);
   };
 
   const togglePin = (e: React.MouseEvent, id: string, isPinned: boolean) => {
@@ -42,13 +42,13 @@ export function Sidebar({ onOpenSettings, onOpenLogs, onEditSession, onSelectSes
         <h1 className="font-bold text-lg truncate">chatbot frontend</h1>
       </div>
 
-      <div className="p-2">
+      <ScrollArea className="flex-1 px-2 py-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               onClick={handleNewSession}
               variant="outline"
-              className="w-full justify-start gap-2 mb-2"
+              className="w-full justify-start gap-2 mb-4"
             >
               <Plus size={16} />
               New Chat Session
@@ -56,9 +56,7 @@ export function Sidebar({ onOpenSettings, onOpenLogs, onEditSession, onSelectSes
           </TooltipTrigger>
           <TooltipContent>Start a new chat session with a server</TooltipContent>
         </Tooltip>
-      </div>
 
-      <ScrollArea className="flex-1 px-2">
         <div className="space-y-1">
           {sortedSessions.map((session) => (
             <div

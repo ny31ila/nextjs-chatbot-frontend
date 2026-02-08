@@ -1,16 +1,15 @@
 'use client';
 
 import { useChatStore, LogEntry } from '@/store/use-chat-store';
-import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Terminal, ChevronDown, ChevronRight } from 'lucide-react';
+import { Terminal, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export function LogsPage() {
-  const { logs, clearLogs } = useChatStore();
+  const { logs } = useChatStore();
   const [expandedLogs, setExpandedLogs] = useState<Record<string, boolean>>({});
 
   const toggleLog = (id: string) => {
@@ -34,10 +33,6 @@ export function LogsPage() {
             <Terminal size={20} />
             <CardTitle>System Logs</CardTitle>
         </div>
-        <Button variant="outline" size="sm" onClick={clearLogs} className="gap-2">
-            <Trash2 size={14} />
-            Clear Logs
-        </Button>
       </CardHeader>
       <CardContent className="flex-1 p-0 overflow-hidden">
         <ScrollArea className="h-[600px] w-full">
@@ -62,7 +57,7 @@ export function LogsPage() {
                                 <Badge variant="outline" className={cn("uppercase text-[10px]", getLogColor(log.type))}>
                                     {log.type}
                                 </Badge>
-                                <span className="text-sm font-mono truncate">{log.message}</span>
+                                <span className="text-sm font-mono break-all">{log.message}</span>
                             </div>
                             <span className="text-[10px] opacity-70 shrink-0">
                                 {new Date(log.timestamp).toLocaleTimeString()}

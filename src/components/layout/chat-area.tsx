@@ -44,6 +44,12 @@ export function ChatArea() {
     scrollToBottom();
   }, [activeSession?.history, activeSessionId]);
 
+  useEffect(() => {
+    if (activeSessionId) {
+      textareaRef.current?.focus();
+    }
+  }, [activeSessionId]);
+
   // Handle WebSocket Connection
   useEffect(() => {
     if (activeSession?.protocol === 'websocket' && activeSession.url) {
