@@ -87,8 +87,8 @@ export function AppSettings({ onSave }: AppSettingsProps) {
           </div>
         </div>
 
-        <div className="p-4 border rounded-lg space-y-2">
-          <h3 className="font-semibold">Preview</h3>
+        <div className="mt-8 p-6 border rounded-lg space-y-4">
+          <h3 className="font-semibold text-lg">Preview</h3>
           <div
             className="p-4 rounded-md border"
             style={{ backgroundColor: primaryColor, color: secondaryColor, borderColor: secondaryColor }}

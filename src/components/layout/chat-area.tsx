@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useChatStore, Message } from '@/store/use-chat-store';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Terminal, Wifi, WifiOff, HelpCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -20,8 +19,30 @@ export function ChatArea() {
   const [isLoading, setIsLoading] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const activeSession = sessions.find((s) => s.id === activeSessionId);
+
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [input]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [activeSession?.history, activeSessionId]);
 
   // Handle WebSocket Connection
   useEffect(() => {
@@ -210,25 +231,36 @@ export function ChatArea() {
                </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
 
       <footer className="p-4 border-t">
-        <form
-          onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-          className="max-w-3xl mx-auto flex gap-2"
-        >
-          <Input
+        <div className="max-w-3xl mx-auto flex items-end gap-2">
+          <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             placeholder={activeSession.protocol === 'websocket' && !wsConnected ? "WebSocket disconnected..." : "Type a message..."}
-            className="flex-1"
+            className="flex-1 min-h-[40px] max-h-[120px] p-3 rounded-md border-2 border-input bg-background resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-base shadow-inner"
             disabled={isLoading || (activeSession.protocol === 'websocket' && !wsConnected)}
+            rows={1}
           />
-          <Button type="submit" size="icon" disabled={isLoading || (activeSession.protocol === 'websocket' && !wsConnected)}>
+          <Button
+            onClick={handleSend}
+            size="icon"
+            className="h-[40px] w-[40px] shrink-0"
+            disabled={isLoading || (activeSession.protocol === 'websocket' && !wsConnected) || !input.trim()}
+          >
             <Send size={18} />
           </Button>
-        </form>
+        </div>
       </footer>
     </div>
   );
